@@ -16,17 +16,26 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Unzip source code
+    - name: Extract source code
       run: |
-        unzip termux-app-mod.zip -d extracted_code
+        mkdir -p extracted_code
+        unzip -q termux-app-mod.zip -d extracted_code
 
-    - name: Build with Gradle
+    - name: Locate and Build APK
       run: |
-        cd extracted_code
+        # البحث عن المجلد الذي يحتوي على gradlew في أي مكان والتحويل إليه تلقائياً
+        GRADLEW_FILE=$(find extracted_code -name "gradlew" -type f -print -quit)
+        if [ -z "$GRADLEW_FILE" ]; then
+          echo "Error: gradlew file not found anywhere!"
+          exit 1
+        fi
+        PROJECT_DIR=$(dirname "$GRADLEW_FILE")
+        echo "Found gradlew in: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
         chmod +x gradlew
         ./gradlew assembleDebug
 
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: termux-debug-apk
