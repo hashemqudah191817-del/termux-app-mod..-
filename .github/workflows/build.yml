@@ -1,0 +1,33 @@
+name: Build Termux APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Unzip source code
+      run: |
+        unzip termux-app-mod.zip -d extracted_code
+
+    - name: Build with Gradle
+      run: |
+        cd extracted_code
+        chmod +x gradlew
+        ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: termux-debug-apk
+        path: extracted_code/**/build/outputs/apk/debug/*.apk
